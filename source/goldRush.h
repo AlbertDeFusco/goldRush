@@ -2,11 +2,11 @@
 
 class pan {
   public:
-    pan(int n);
+    pan();
     ~pan();
 
     bool hasGold();
-    void sift();
+    int sift();
 
   private:
     int nRandom;
@@ -27,9 +27,16 @@ bool isPrime(int number)
   return true;
 }
 
-bool isThabit(int number)
+bool isSafe(int number)
 {
-  int star = log2((number+1)/3);
-  return isPrime(star);
+  int safe = (number-1)/2;
+  return isPrime(safe);
 }
 
+long long int factorial(int number)
+{
+  if(number==0)
+    return 1;
+  long long int fac=number*factorial(number-1);
+  return fac;
+}
