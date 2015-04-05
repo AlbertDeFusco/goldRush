@@ -1,34 +1,35 @@
 #include <iostream>
 #include <stdlib.h>
-#include <math.h>
-#include <time.h>
+#include <list>
 #include "goldRush.h"
 
 #define AU 79
-#define heap 100
+#define PILE 1000
+#define SEED 342
+#define PANS 1000000
 
 using namespace std;
 
 pan::pan()
 {
-  nRandom=heap;
-  myStream = new int[nRandom];
-  for (int i=0;i<nRandom;i++)
-    myStream[i]=rand()%10000+1;
+  nChunks=PILE;
+  myPile = new int[nChunks];
+  for (int i=0;i<nChunks;i++)
+    myPile[i]=rand()%100000+1;
 }
 
 pan::~pan()
 {
-  delete myStream;
+  delete myPile;
 }
 
 int pan::sift()
 {
   int foundGold=0;
 
-  for (int i=0;i<nRandom;i++)
+  for (int i=0;i<nChunks;i++)
   {
-    int trial=myStream[i];
+    int trial=myPile[i];
     if(trial == AU)
       foundGold++;
   }
@@ -45,18 +46,28 @@ bool pan::hasGold()
 
 int main(int argc, char* argv[]) {
 
-  srand( atoi(argv[1]) );
+  srand(SEED);
 
-  int nPans = 100000;
-  pan* myPans = new pan[nPans];
+  cout << "Gold Rush!" << endl << endl;
 
-  int total=0;
-  for (int i=0;i<nPans;i++)
+  int totalDirt = PANS*PILE;
+  cout << "  " << totalDirt/8/1024/1024 << " total MB of dirt" << endl;
+  cout << "  " << PANS << " pans" << endl;
+
+  //generate dirt and pans in serial
+  //random number generators are not thread safe
+  pan* myPans = new pan[PANS];
+  list<int> withGold;
+
+  for (int i=0;i<PANS;i++)
   {
     bool gold=myPans[i].hasGold();
     if(gold)
-      total++;
+      withGold.push_back(i);
   }
-  cout << total << endl;
+
+  cout << endl;
+  cout << "  found gold in " << withGold.size() << " pans" << endl;
+  cout << endl;
   return 0;
 }
