@@ -88,7 +88,12 @@ int main(int argc, char* argv[]) {
 #endif //CILK
 
   cout << endl;
-  cout << "  found gold in " << withGold.size() << " pans" << endl;
+  cout << "  Found gold in " << withGold.size() << " pans" << endl;
+
+  list<int>::const_iterator iterator;
+  cout << "  ";
+  for (iterator = withGold.begin();iterator != withGold.end(); ++iterator)
+    cout << *iterator << "  ";
   cout << endl;
   return 0;
 }
