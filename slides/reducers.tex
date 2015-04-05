@@ -222,9 +222,9 @@ for(int i=0;i<N;++i)
   \frametitle{Cilk Reducers}
   \begin{itemize}
     \item Any associative operation is a valid reducer
-      \begin{equation}
+      \begin{equation*}
         x\ OP\ y = y\ OP\ x
-      \end{equation}
+      \end{equation*}
     \item Provide thread safe access to a ``smart pointer''
     \item Small parallel overhead for usage
     \item Very extensible
@@ -294,6 +294,21 @@ for(int i=0;i<N;++i)
     \draw[color=blue] (0.8,2.8) rectangle (5.5,3.1);
     \draw[color=blue] (0.3,2) rectangle (6.2,2.3);
   \end{tikzpicture}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Gold Rush}
+  {\scriptsize
+  \begin{verbatim}
+Gold Rush!
+
+  12 total kB of dirt
+  1000 pans
+
+  Found gold in 15 pans
+  Pan IDs: 94  142  265  268  289  440  442  443  569  600  721  781  783  806  818
+  \end{verbatim}
+}
 \end{frame}
 
 \end{document}
