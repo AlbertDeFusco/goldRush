@@ -91,7 +91,7 @@ int main(int argc, char* argv[]) {
   cout << "  Found gold in " << withGold.size() << " pans" << endl;
 
   list<int>::const_iterator iterator;
-  cout << "  ";
+  cout << "  Pan IDs: ";
   for (iterator = withGold.begin();iterator != withGold.end(); ++iterator)
     cout << *iterator << "  ";
   cout << endl;
