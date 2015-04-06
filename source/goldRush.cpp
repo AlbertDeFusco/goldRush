@@ -2,56 +2,17 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <list>
+#include <omp.h> //only for timing
 
-#ifdef CILK
 #include <cilk/cilk.h>
+#include <cilk/cilk_api.h>
 #include <cilk/reducer_list.h>
-#endif //CILK
 
 #include "goldRush.h"
 
-#define AU 79
-#define PILE 100
-#define SEED 342
 #define PANS 1000
-#define MAX 10000
-#define AMDAHL 1
 
 using namespace std;
-
-pan::pan()
-{
-  nChunks=PILE;
-  myPile = new int[nChunks];
-  for (int i=0;i<nChunks;i++)
-    myPile[i]=rand()%MAX+1;
-}
-
-pan::~pan()
-{
-  delete myPile;
-}
-
-int pan::sift()
-{
-  int foundGold=0;
-
-  for (int i=0;i<nChunks;i++)
-  {
-    int trial=myPile[i];
-    if(trial == AU)
-      foundGold++;
-    usleep(AMDAHL);
-  }
-  return foundGold;
-}
-
-bool pan::hasGold()
-{
-  int foundGold = this->sift();
-  return (foundGold>0);
-}
-
 
 
 int main(int argc, char* argv[]) {
@@ -61,39 +22,66 @@ int main(int argc, char* argv[]) {
   cout << "Gold Rush!" << endl << endl;
 
   int totalDirt = PANS*PILE;
-  cout << "  " << totalDirt/8/1024 << " total kB of dirt" << endl;
+  cout << "  " << totalDirt << " total chunks of dirt" << endl;
   cout << "  " << PANS << " pans" << endl;
 
   //generate dirt and pans in serial
   pan* myPans = new pan[PANS];
   list<int> withGold;
+  list<int> withGoldCilk;
 
-#ifdef CILK
-  cilk::reducer< cilk::op_list_append<int> > reducer_withGold;
-  int n=PANS;
-  cilk_for (int i=0;i<n;++i)
-  {
-    bool gold=myPans[i].hasGold();
-    if(gold)
-      reducer_withGold->push_back(i);
-  }
-  withGold = reducer_withGold.get_value();
-#else
+  //The serial implementation
+  double startSerial=omp_get_wtime();
   for (int i=0;i<PANS;i++)
   {
     bool gold=myPans[i].hasGold();
     if(gold)
       withGold.push_back(i);
   }
-#endif //CILK
+  double timeSerial = omp_get_wtime() - startSerial;
 
+  //The Cilk implementation
+  double startCilk=omp_get_wtime();
+  cilk::reducer< cilk::op_list_append<int> > reducer_withGold;
+  cilk_for (int i=0;i<PANS;++i)
+  {
+    bool gold=myPans[i].hasGold();
+    if(gold)
+      reducer_withGold->push_back(i);
+  }
+  withGoldCilk = reducer_withGold.get_value();
+  double timeCilk = omp_get_wtime() - startCilk;
+
+
+  //Print the results
   cout << endl;
-  cout << "  Found gold in " << withGold.size() << " pans" << endl;
+  cout << "  Found gold in " << withGoldCilk.size() << " pans" << endl;
 
-  list<int>::const_iterator iterator;
   cout << "  Pan IDs: ";
-  for (iterator = withGold.begin();iterator != withGold.end(); ++iterator)
+  list<int>::const_iterator iterator;
+  for (iterator = withGoldCilk.begin();iterator != withGoldCilk.end(); ++iterator)
     cout << *iterator << "  ";
   cout << endl;
-  return 0;
+
+  cout << endl;
+  int retValue=0;
+  if (withGold == withGoldCilk)
+    cout << "Cilk identified the correct pans" << endl;
+  else {
+    cout << "Cilk did not identify the correct pans" << endl;
+    retValue=1;
+  }
+  cout << endl;
+
+  int nworkers=__cilkrts_get_nworkers();
+  cout << "serial execution took " << timeSerial << " seconds" << endl;
+  cout << endl;
+  cout << "parallel execution took " << timeCilk << " seconds" 
+    << " on " << nworkers << " workers" << endl;
+  cout << "parallel speedup " << timeSerial/timeCilk << endl;
+  cout << "paralell efficiency " << timeSerial/nworkers/timeCilk << endl;
+
+  delete[] myPans;
+
+  return retValue;
 }
