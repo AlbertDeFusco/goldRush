@@ -17,8 +17,6 @@ using namespace std;
 
 int main(int argc, char* argv[]) {
 
-  srand(SEED);
-
   cout << "Gold Rush!" << endl << endl;
 
   int totalDirt = PANS*PILE;
@@ -26,21 +24,22 @@ int main(int argc, char* argv[]) {
   cout << "  " << PANS << " pans" << endl;
 
   //generate dirt and pans in serial
+  srand(SEED);
   pan* myPans = new pan[PANS];
-  list<int> withGold;
-  list<int> withGoldCilk;
 
   //The serial implementation
+  list<int> withGoldSerial;
   double startSerial=omp_get_wtime();
-  for (int i=0;i<PANS;i++)
+  for (int i=0;i<PANS;++i)
   {
     bool gold=myPans[i].hasGold();
     if(gold)
-      withGold.push_back(i);
+      withGoldSerial.push_back(i);
   }
   double timeSerial = omp_get_wtime() - startSerial;
 
   //The Cilk implementation
+  list<int> withGoldCilk;
   double startCilk=omp_get_wtime();
   cilk::reducer< cilk::op_list_append<int> > reducer_withGold;
   cilk_for (int i=0;i<PANS;++i)
@@ -65,7 +64,7 @@ int main(int argc, char* argv[]) {
 
   cout << endl;
   int retValue=0;
-  if (withGold == withGoldCilk)
+  if (withGoldSerial == withGoldCilk)
     cout << "Cilk identified the correct pans" << endl;
   else {
     cout << "Cilk did not identify the correct pans" << endl;
