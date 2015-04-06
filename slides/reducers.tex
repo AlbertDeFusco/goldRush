@@ -71,9 +71,9 @@
 class pan
 {
   public:
-    pan();          //create array of random integers
+    pan();          //create array of random integers between 1 and 10,000
+    int sift();     //returns frequency of the number 79 (atomic number of gold)
     bool hasGold(); //calls sift; true if sift returns >0
-    int sift();     //returns frequency of 79 (gold)
 }
 
 int main()
@@ -88,15 +88,33 @@ int main()
       withGold.push_back(i);
     }
   }
-  list<int>::const_iterator iterator;
+  std::list<int>::const_iterator iterator;
   for (iterator = withGold.begin(); iterator != withGold.end(); ++iterator)
-    cout << *iterator << "  ";
-  cout << endl;
+    std::cout << *iterator << "  ";
+  std::cout << endl;
 
   return 0;
 }
   \end{lstlisting}
 \end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Gold Rush}
+  {\scriptsize
+  \begin{verbatim}
+Gold Rush!
+
+  10000 total chunks of dirt
+  1000 pans
+
+  Found gold in 15 pans
+  Pan IDs: 94  142  265  268  289  440  442  443  569  600  721  781  783  806  818
+
+serial execution took 5.60495 seconds
+  \end{verbatim}
+}
+\end{frame}
+
 
 \begin{frame}[fragile]
   \frametitle{Parallel Gold Sifting}
@@ -105,9 +123,9 @@ int main()
 class pan
 {
   public:
-    pan();          //create array of random integers
+    pan();          //create array of random integers between 1 and 10,000
+    int sift();     //returns frequency of the number 79 (atomic number of gold)
     bool hasGold(); //calls sift; true if sift returns >0
-    int sift();     //returns frequency of 79 (gold)
 }
 
 int main()
@@ -122,10 +140,10 @@ int main()
       withGold.push_back(i);
     }
   }
-  list<int>::const_iterator iterator;
+  std::list<int>::const_iterator iterator;
   for (iterator = withGold.begin(); iterator != withGold.end(); ++iterator)
-    cout << *iterator << "  ";
-  cout << endl;
+    std::cout << *iterator << "  ";
+  std::cout << endl;
 
   return 0;
 }
@@ -134,6 +152,15 @@ int main()
     \draw[color=red] (5.5,2.5) rectangle (0.0,4.5);
   \end{tikzpicture}
 \end{frame}
+
+\begin{frame}
+  \frametitle{Parallel Gold Sifting}
+  \begin{itemize}
+    \item Need to report which pans have gold
+    \item How do we keep track of which pans have gold?
+  \end{itemize}
+\end{frame}
+
 \begin{frame}[fragile]
   \frametitle{Parallel Gold Sifting}
   \begin{lstlisting}[language=C++,basicstyle=\scriptsize]
@@ -141,9 +168,9 @@ int main()
 class pan
 {
   public:
-    pan();          //create array of random integers
+    pan();          //create array of random integers between 1 and 10,000
+    int sift();     //returns frequency of the number 79 (atomic number of gold)
     bool hasGold(); //calls sift; true if sift returns >0
-    int sift();     //returns frequency of 79 (gold)
 }
 
 int main()
@@ -158,10 +185,10 @@ int main()
       withGold.push_back(i);
     }
   }
-  list<int>::const_iterator iterator;
+  std::list<int>::const_iterator iterator;
   for (iterator = withGold.begin(); iterator != withGold.end(); ++iterator)
-    cout << *iterator << "  ";
-  cout << endl;
+    std::cout << *iterator << "  ";
+  std::cout << endl;
 
   return 0;
 }
@@ -169,8 +196,10 @@ int main()
   \begin{tikzpicture}[overlay]
     \draw[color=red] (5.5,2.5) rectangle (0.0,4.5);
     \draw[color=blue] (6,2.5) rectangle (10,4.5);
+    %\item It is inefficient to hire a foreman to just count gold
   \end{tikzpicture}
 \end{frame}
+
 
 \begin{frame}
   \frametitle{Thread Safety}
@@ -196,8 +225,11 @@ int main()
 \begin{frame}[fragile]
   \frametitle{Inefficient solutions}
   \begin{itemize}
-    \item lock
-    \item mutex
+    \item Non deterministic
+      \begin{itemize}
+        \item Lock access with mutex
+        \item Requires careful programming
+      \end{itemize}
   \end{itemize}
   \begin{itemize}
     \item cannot use {\tt cilk\_sync} in the loop
@@ -206,9 +238,14 @@ int main()
       \end{itemize}
   \end{itemize}
   \begin{itemize}
-    \item break the loop; requiring more storage
+    \item Break the loop
+      \begin{itemize}
+        \item Requires more storage and management
+      \end{itemize}
   \end{itemize}
   \begin{lstlisting}[language=C++,basicstyle=\scriptsize]
+#include <cilk/cilk.h>
+
 double *sum = new double[N];
 cilk_for(int i=0;i<N;++i)
   sum[N] = f(N)
@@ -221,13 +258,13 @@ for(int i=0;i<N;++i)
 \begin{frame}
   \frametitle{Cilk Reducers}
   \begin{itemize}
+    \item Provide thread safe access to a ``smart pointer''
     \item Any associative operation is a valid reducer
       \begin{equation*}
         x\ OP\ y = y\ OP\ x
       \end{equation*}
-    \item Provide thread safe access to a ``smart pointer''
     \item Small parallel overhead for usage
-    \item Very extensible
+    \item Very extensible in C++
     \item Operations are guaranteed to execute in the same order as in serial
   \end{itemize}
 \end{frame}
@@ -239,7 +276,7 @@ for(int i=0;i<N;++i)
     \item When strands merge
       \begin{itemize}
         \item ``views'' are combined by $OP$
-        \item The combined ``view'' is given to the exit thread
+        \item The combined ``view'' is given to the exit strand
       \end{itemize}
   \end{itemize}
 \end{frame}
@@ -266,7 +303,7 @@ for(int i=0;i<N;++i)
 %\end{frame}
 
 \begin{frame}[fragile]
-  \frametitle{Find pans with gold}
+  \frametitle{Parallel gold sifting}
   \begin{lstlisting}[language=C++,basicstyle=\scriptsize]
 #include <cilk/cilk.h>
 #include <cilk/reducer_list.h>
@@ -300,13 +337,24 @@ for(int i=0;i<N;++i)
   \frametitle{Gold Rush}
   {\scriptsize
   \begin{verbatim}
+$>cat /proc/cpuinfo | grep Xeon | uniq -c
+     16 model name      : Intel(R) Xeon(R) CPU E5-2670 0 @ 2.60GHz
+$>CILK_NWORKERS=16 ./goldRush
 Gold Rush!
 
-  12 total kB of dirt
+  100000 total chunks of dirt
   1000 pans
 
   Found gold in 15 pans
   Pan IDs: 94  142  265  268  289  440  442  443  569  600  721  781  783  806  818
+
+Cilk identified the correct pans
+
+serial execution took 5.60154 seconds
+
+parallel execution took 0.39801 seconds with 16 workers
+parallel speedup 14.0739
+paralell efficiency 0.879616
   \end{verbatim}
 }
 \end{frame}
