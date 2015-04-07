@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
   }
   double timeSerial = omp_get_wtime() - startSerial;
 
-  //The Cilk implementation
+  //The Cilk Plus implementation
   list<int> withGoldCilk;
   double startCilk=omp_get_wtime();
   cilk::reducer< cilk::op_list_append<int> > reducer_withGold;

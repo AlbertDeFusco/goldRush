@@ -8,7 +8,7 @@ Pan::Pan()
 {
   nChunks=PILE;
   myPile = new int[nChunks];
-  for (int i=0;i<nChunks;i++)
+  for (int i=0;i<nChunks;++i)
     myPile[i]=rand()%MAX+1;
 }
 
@@ -21,10 +21,10 @@ int Pan::sift()
 {
   int foundGold=0;
 
-  for (int i=0;i<nChunks;i++)
+  for (int i=0;i<nChunks;++i)
   {
     if(myPile[i] == AU)
-      foundGold++;
+      ++foundGold;
     usleep(AMDAHL);
   }
   return foundGold;
