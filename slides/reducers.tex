@@ -217,7 +217,7 @@ int main()
         \item Multiple threads accessing the same address
           \begin{itemize}
             \item Basic types are not thread safe
-            \item STL types {\emph may} be thread safe
+            \item STL containers \emph{may} be thread safe for some operations
           \end{itemize}
       \end{itemize}
     \itemsep 0.5cm
@@ -234,19 +234,16 @@ int main()
 \begin{frame}[fragile]
   \frametitle{Inefficient solutions}
   \begin{itemize}
+    \itemsep 0.4cm
     \item Locking
       \begin{itemize}
         \item Requires careful programming
         \item Non deterministic
       \end{itemize}
-  \end{itemize}
-  \begin{itemize}
     \item cannot use {\tt cilk\_sync} in the loop
       \begin{itemize}
         \item will only sync child threads, not all threads
       \end{itemize}
-  \end{itemize}
-  \begin{itemize}
     \item Break the loop
       \begin{itemize}
         \item Requires more storage and management
@@ -275,7 +272,7 @@ for(int i=0;i<N;++i)
       \begin{equation*}
         x\ OP\ y = y\ OP\ x
       \end{equation*}
-    \item Small parallel overhead for usage
+    \item Small performance overhead for usage
     \item Very extensible in C++
     \item Operations are guaranteed to execute in the same order as in serial
   \end{itemize}
@@ -308,17 +305,23 @@ total = reducer_total.get_value();
 
 \begin{frame}[fragile]
   \frametitle{Cilk Reducers: types}
-  \begin{table}
     {\scriptsize
-    \begin{tabular}{l|c|c}
-      Type & Description & Header\\
+  usage: \verb|cilk::reducer<cilk::REDUCER_TYPE<<my_type>> my_reducer;|
+  \begin{table}
+    \begin{tabular}{l|c|l}
+      Reducer Type & Description & Header\\
       \hline
-      \tt{op\_add} & ++, --, +=, -=, +, - & \verb|#include <cilk/reducer_add.h>|\\
-      \tt{op\_vector} & Provides \verb|push_back()|& \verb|#include <cilk/reducer_vector.h>|
+      \tt{op\_add} & \tt{++, --, +=, -=, +, -} & \verb|#include <cilk/reducer_add.h>|\\
+      \tt{op\_vector} & Provides \verb|push_back()|& \verb|#include <cilk/reducer_vector.h>|\\
+      \tt{op\_list\_append} & Provides \verb|push_back()|& \verb|#include <cilk/reducer_list.h>|\\
+      \tt{op\_list\_prepend} & Provides \verb|push_front()|& \verb|#include <cilk/reducer_list.h>|\\
+      \tt{op\_max} & Returns maximum & \verb|#include <cilk/reducer_max.h>|\\
+      \tt{op\_min} & Returns minimum & \verb|#include <cilk/reducer_min.h>|\\
+      \tt{op\_ostream} & Provides \tt{<<}& \verb|#include <cilk/reducer_string.h>|
     \end{tabular}
     \caption{\tt{https://software.intel.com/en-us/node/522606}}
-}
   \end{table}
+}
 
 \end{frame}
 
