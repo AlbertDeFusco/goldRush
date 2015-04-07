@@ -1,6 +1,7 @@
+#include "pan.h"
+
 #include <iostream>
 #include <stdlib.h>
-#include <unistd.h>
 #include <list>
 #include <omp.h> //only for timing
 
@@ -8,8 +9,7 @@
 #include <cilk/cilk_api.h>
 #include <cilk/reducer_list.h>
 
-#include "goldRush.h"
-
+//constants
 #define PANS 1000
 
 using namespace std;
@@ -25,7 +25,7 @@ int main(int argc, char* argv[]) {
 
   //generate dirt and pans in serial
   srand(SEED);
-  pan* myPans = new pan[PANS];
+  Pan* myPans = new Pan[PANS];
 
   //The serial implementation
   list<int> withGoldSerial;
