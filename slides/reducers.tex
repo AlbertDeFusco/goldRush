@@ -50,17 +50,17 @@
 \begin{frame}
   \frametitle{Parallel Gold Sifting}
   \begin{itemize}
-    \item each pan can sift a constant amount of dirt/day
-    \item more pans means more dirt sifted
+    \item Each pan can sift a constant amount of dirt/day
+    \item More pans means more dirt sifted
   \end{itemize}
   \vskip 0.2cm
   \begin{itemize}
-    \item each pan sifts independently
-    \item each pan has a definite amount of dirt to sift
+    \item<2-> Each pan sifts independently
+    \item<2-> Each pan has a defined amount of dirt to sift
   \end{itemize}
   \vskip 0.2cm
   \begin{itemize}
-    \item sifting is parallelizable
+    \item<3-> sifting is parallelizable
   \end{itemize}
 \end{frame}
 
@@ -73,13 +73,13 @@ class pan
   public:
     pan();          //create array of random integers between 1 and 10,000
     int sift();     //returns frequency of the number 79 (atomic number of gold)
-    bool hasGold(); //calls sift; true if sift returns >0
+    bool hasGold(); //calls sift; returns true if sift() > 0
 }
 
 int main()
 {
   std::list<int> withGold;
-  pan* myPans = new pan[nPans];
+  Pan* myPans = new Pan[nPans];
 
   for(int i=0; i<nPans; ++i)
   {
@@ -120,18 +120,19 @@ serial execution took 5.60495 seconds
   \frametitle{Parallel Gold Sifting}
   \begin{lstlisting}[language=C++,basicstyle=\scriptsize]
 #include <list>
+#include <cilk/cilk.h>
 class pan
 {
   public:
     pan();          //create array of random integers between 1 and 10,000
     int sift();     //returns frequency of the number 79 (atomic number of gold)
-    bool hasGold(); //calls sift; true if sift returns >0
+    bool hasGold(); //calls sift; returns true if sift() > 0
 }
 
 int main()
 {
   std::list<int> withGold;
-  pan* myPans = new pan[nPans];
+  Pan* myPans = new Pan[nPans];
 
   cilk_for(int i=0; i<nPans; ++i)
   {
@@ -149,15 +150,20 @@ int main()
 }
   \end{lstlisting}
   \begin{tikzpicture}[overlay]
-    \draw[color=red] (5.5,2.5) rectangle (0.0,4.5);
+    \draw[color=red] (5.5,2.4) rectangle (0.0,4.4);
   \end{tikzpicture}
 \end{frame}
 
 \begin{frame}
   \frametitle{Parallel Gold Sifting}
   \begin{itemize}
-    \item Need to report which pans have gold
-    \item How do we keep track of which pans have gold?
+    \item There is a problem to be solved
+      \begin{itemize}
+        \item How do we keep track of which pans have gold?
+      \end{itemize}
+      \vskip 1.0cm
+    \item Where does the result get stored?
+    \item Who can access the result?
   \end{itemize}
 \end{frame}
 
@@ -165,18 +171,19 @@ int main()
   \frametitle{Parallel Gold Sifting}
   \begin{lstlisting}[language=C++,basicstyle=\scriptsize]
 #include <list>
+#include <cilk/cilk.h>
 class pan
 {
   public:
     pan();          //create array of random integers between 1 and 10,000
     int sift();     //returns frequency of the number 79 (atomic number of gold)
-    bool hasGold(); //calls sift; true if sift returns >0
+    bool hasGold(); //calls sift; returns true if sift() > 0
 }
 
 int main()
 {
   std::list<int> withGold;
-  pan* myPans = new pan[nPans];
+  Pan* myPans = new Pan[nPans];
 
   cilk_for(int i=0; i<nPans; ++i)
   {
@@ -195,7 +202,8 @@ int main()
   \end{lstlisting}
   \begin{tikzpicture}[overlay]
     \draw[color=red] (5.5,2.5) rectangle (0.0,4.5);
-    \draw[color=blue] (6,2.5) rectangle (10,4.5);
+    %\draw[color=blue] (6,2.5) rectangle (10,4.5);
+    \node[draw,align=center] at (8,3.5) {\color{red} may not be thread-safe};
     %\item It is inefficient to hire a foreman to just count gold
   \end{tikzpicture}
 \end{frame}
@@ -209,11 +217,12 @@ int main()
         \item Multiple threads accessing the same address
           \begin{itemize}
             \item Basic types are not thread safe
-            \item STL types are not thread safe
+            \item STL types {\emph may} be thread safe
           \end{itemize}
-        \item Threads read and write memory at undetermined times
-        \item Leads to a race condition
       \end{itemize}
+    \itemsep 0.5cm
+    \item<2-> Threads read and write memory at undetermined times
+    \item<3-> Leads to a race condition
   \end{itemize}
 \end{frame}
 
@@ -225,10 +234,10 @@ int main()
 \begin{frame}[fragile]
   \frametitle{Inefficient solutions}
   \begin{itemize}
-    \item Non deterministic
+    \item Locking
       \begin{itemize}
-        \item Lock access with mutex
         \item Requires careful programming
+        \item Non deterministic
       \end{itemize}
   \end{itemize}
   \begin{itemize}
@@ -247,9 +256,12 @@ int main()
 #include <cilk/cilk.h>
 
 double *sum = new double[N];
+//parallel
 cilk_for(int i=0;i<N;++i)
-  sum[N] = f(N)
-double total=0.0;
+  sum[N] = f(N);
+
+//serial
+int total=0;
 for(int i=0;i<N;++i)
   total+=sum[N];
   \end{lstlisting}
@@ -269,14 +281,22 @@ for(int i=0;i<N;++i)
   \end{itemize}
 \end{frame}
 
-\begin{frame}
+\begin{frame}[fragile]
   \frametitle{Cilk Reducers: views}
+  \begin{lstlisting}[language=C++,basicstyle=\scriptsize]
+#include <cilk/reducer_opadd.h>
+int total=0;
+cilk::reducer<cilk::<op_add<int>> reducer_total (0);
+for(int i=0;i<4;++i)
+  ++*reducer_total;
+total = reducer_total.get_value();
+  \end{lstlisting}
   \begin{itemize}
-    \item At spawn each strand gets a private ``view'' of the reducer
+    \item At spawn each strand gets a private \emph{view} of the reducer
     \item When strands merge
       \begin{itemize}
-        \item ``views'' are combined by $OP$
-        \item The combined ``view'' is given to the exit strand
+        \item \emph{views} are combined by $OP$
+        \item The combined \emph{view} is given to the exit strand
       \end{itemize}
   \end{itemize}
 \end{frame}
@@ -286,21 +306,22 @@ for(int i=0;i<N;++i)
   \includegraphics[width=\textwidth]{figures/reduce}
 \end{frame}
 
-%\begin{frame}[fragile]
-  %\frametitle{Sum reduction}
-  %\begin{lstlisting}[language=C++,basicstyle=\scriptsize]
-%#include <cilk/cilk.h>
-%#include <cilk/reducer_add.h>
-%int total;
-%cilk::reducer<cilk::op_add> red_total (0);
-%cilk_for(int i=0;i<N;++i)
-  %*total += f(N);
-%total = red_total.get_value();
-  %\end{lstlisting}
-  %\begin{itemize}
-    %\item Direct assignment of a reducer is not allowed
-  %\end{itemize}
-%\end{frame}
+\begin{frame}[fragile]
+  \frametitle{Cilk Reducers: types}
+  \begin{table}
+    {\scriptsize
+    \begin{tabular}{l|c|c}
+      Type & Description & Header\\
+      \hline
+      \tt{op\_add} & ++, --, +=, -=, +, - & \verb|#include <cilk/reducer_add.h>|\\
+      \tt{op\_vector} & Provides \verb|push_back()|& \verb|#include <cilk/reducer_vector.h>|
+    \end{tabular}
+    \caption{\tt{https://software.intel.com/en-us/node/522606}}
+}
+  \end{table}
+
+\end{frame}
+
 
 \begin{frame}[fragile]
   \frametitle{Parallel gold sifting}
@@ -310,7 +331,7 @@ for(int i=0;i<N;++i)
 
   std::list<int> withGold;
   cilk::reducer< cilk::op_list_append<int> > reducer_withGold;
-  pan* myPans = new pan[nPans];
+  Pan* myPans = new Pan[nPans];
 
   cilk_for(int i=0; i<nPans; ++i)
   {
@@ -321,10 +342,10 @@ for(int i=0;i<N;++i)
   }
   withGold = reducer_withGold.get_value();
 
-  list<int>::const_iterator iterator;
+  std::list<int>::const_iterator iterator;
   for (iterator = withGold.begin(); iterator != withGold.end(); ++iterator)
-    cout << *iterator << "  ";
-  cout << endl;
+    std::cout << *iterator << "  ";
+  std::cout << endl;
   \end{lstlisting}
   \begin{tikzpicture}[overlay]
     \draw[color=blue] (0.2,4.8) rectangle (9.3,5.1);
