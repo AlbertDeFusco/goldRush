@@ -1,23 +1,10 @@
-#define AU 79
-#define AMDAHL 1
-#define MAX 10000
-#define SEED 342
-#define PILE 100
+#include "pan.h"
 
-class pan {
-  public:
-    pan();
-    ~pan();
+#include <unistd.h>
+#include <stdlib.h>
 
-    bool hasGold();
-    int sift();
 
-  private:
-    int nChunks;
-    int *myPile;
-};
-
-pan::pan()
+Pan::Pan()
 {
   nChunks=PILE;
   myPile = new int[nChunks];
@@ -25,12 +12,12 @@ pan::pan()
     myPile[i]=rand()%MAX+1;
 }
 
-pan::~pan()
+Pan::~Pan()
 {
   delete[] myPile;
 }
 
-int pan::sift()
+int Pan::sift()
 {
   int foundGold=0;
 
@@ -43,7 +30,7 @@ int pan::sift()
   return foundGold;
 }
 
-bool pan::hasGold()
+bool Pan::hasGold()
 {
   int foundGold = sift();
   return (foundGold>0);

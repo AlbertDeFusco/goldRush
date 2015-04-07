@@ -1,10 +1,13 @@
 CC = icc
 CCLFAGS = -openmp
 
+source = goldRush.cpp pan.cpp
+header = pan.h
+
 all = goldRush
 
-goldRush: goldRush.cpp goldRush.h
-	$(CC) $(CCLFAGS) -o $@ $<
+goldRush: $(source) $(header)
+	$(CC) $(CCLFAGS) -o $@ $(source)
 
 clean:
 	$(RM) $(all)
