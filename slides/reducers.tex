@@ -270,10 +270,9 @@ for(int i=0;i<N;++i)
     \itemsep 0.5cm
     \item Provide thread safe access to a ``smart pointer''
     \item Any associative operation is a valid reducer
-      \begin{eqnarray*}
-        x\ OP\ y &=&  y\ OP\ x \\
-        \left(x\ OP\ y\right)\ OP\ \left(a\ OP\ b\right) &=& x\ OP\ y\ OP\ a\ OP\ b
-      \end{eqnarray*}
+      \begin{equation*}
+        \left(x\ OP\ y\right)\ OP\ \left(a\ OP\ b\right) = x\ OP\ y\ OP\ a\ OP\ b
+      \end{equation*}
     \item Small performance overhead for usage
     \item Very extensible in C++
     \item Operations are guaranteed to execute in the same order as in serial
